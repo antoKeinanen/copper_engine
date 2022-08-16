@@ -1,5 +1,5 @@
 # Copper Engine
-OpenGL based vertex renderer and game engine.
+OpenGL based vertex renderer and game engine written in rust.
 
 ## Features
 - Phong shading
