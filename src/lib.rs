@@ -6,6 +6,7 @@ extern crate image;
 use glium::{
     glutin::{
         self,
+        event::{self, Event, WindowEvent},
         event_loop::{self, EventLoop},
         window::WindowBuilder,
     },
@@ -100,14 +101,14 @@ impl Object {
 
 pub struct InputManager {
     pub pressed_scancodes: HashSet<u32>,
-    pub modifiers: glutin::event::ModifiersState,
+    pub modifiers: event::ModifiersState,
 }
 
 impl InputManager {
     pub fn new() -> Self {
         Self {
             pressed_scancodes: HashSet::new(),
-            modifiers: glutin::event::ModifiersState::default(),
+            modifiers: event::ModifiersState::default(),
         }
     }
 }
@@ -156,6 +157,8 @@ pub fn engine(mut scene: Scene) {
     let cb = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display = Display::new(wb, cb, &event_loop).expect("Failed to init display");
 
+    let mut egui_glium = egui_glium::EguiGlium::new(&display, &event_loop);
+
     let vertex_shader_src = fs::read_to_string("shaders/vertex_shader.glsl").expect("");
     let vertex_shader_src = vertex_shader_src.as_str();
 
@@ -198,34 +201,155 @@ pub fn engine(mut scene: Scene) {
 
     (scene.main_camera.on_awake)(&mut scene);
 
-
     let mut t = 0.5;
     event_loop.run(move |ev, _, control_flow| {
         let now = std::time::Instant::now();
         scene.time_since_start = (now - start_time).as_secs_f32();
 
+        let mut redraw = || {
+            let mut quit = false;
+
+            let repaint_after = egui_glium.run(&display, |egui_ctx| {
+                egui::SidePanel::left("my_side_panel").show(egui_ctx, |ui| {
+                    ui.heading("Hello World!");
+                    if ui.button("Quit").clicked() {
+                        quit = true;
+                    }
+                });
+            });
+
+            *control_flow = if quit {
+                glutin::event_loop::ControlFlow::Exit
+            } else if repaint_after.is_zero() {
+                display.gl_window().window().request_redraw();
+                glutin::event_loop::ControlFlow::Poll
+            } else if let Some(repaint_after_instant) =
+                std::time::Instant::now().checked_add(repaint_after)
+            {
+                glutin::event_loop::ControlFlow::WaitUntil(repaint_after_instant)
+            } else {
+                glutin::event_loop::ControlFlow::Wait
+            };
+
+            {
+                let next_frame_time =
+                    std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
+                *control_flow = event_loop::ControlFlow::WaitUntil(next_frame_time);
+                scene.delta_time = (now - prev_time).as_secs_f32();
+
+                let mut target = display.draw();
+                target.clear_color_and_depth((0.1, 0.2, 0.3, 1.0), 1.0);
+
+                t += scene.delta_time * 0.5;
+                // if t > 2.0 {
+                //     t = -2.0;
+                // }
+
+                let perspective = {
+                    let (width, height) = target.get_dimensions();
+                    let aspect_ratio = height as f32 / width as f32;
+
+                    let fov: f32 = 3.141592 / 3.0;
+                    let zfar = 1024.0;
+                    let znear = 0.1;
+
+                    let f = 1.0 / (fov / 2.0).tan();
+
+                    [
+                        [f * aspect_ratio, 0.0, 0.0, 0.0],
+                        [0.0, f, 0.0, 0.0],
+                        [0.0, 0.0, (zfar + znear) / (zfar - znear), 1.0],
+                        [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
+                    ]
+                };
+
+                let position_matrix = [
+                    [t.cos(), 0.0, -t.sin(), 0.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                    [t.sin(), 0.0, t.cos(), 0.0],
+                    [0.0, 0.0, 0.0, 1.0f32],
+                ];
+
+                let light = [0.0, 10.0, -5.0f32];
+
+                let params = glium::DrawParameters {
+                    depth: glium::Depth {
+                        test: glium::draw_parameters::DepthTest::IfLess,
+                        write: true,
+                        ..Default::default()
+                    },
+                    backface_culling:
+                        glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
+                    ..Default::default()
+                };
+
+                let cam = scene.main_camera;
+
+                (cam.tick_update_func)(&mut scene);
+
+                let view = view_matrix(&cam.position, &cam.rotation, &cam.up_vector);
+
+                // under gui layer
+
+                for object in &scene.game_objects {
+                    target
+                        .draw(
+                            (
+                                object.vertices.as_ref().unwrap(),
+                                object.normals.as_ref().unwrap(),
+                            ),
+                            object.indices.as_ref().unwrap(),
+                            &object.program.as_ref().unwrap(),
+                            &uniform! {
+                                position_matrix: position_matrix,
+                                u_light: light,
+                                perspective: perspective,
+                                view: view
+                            },
+                            &params,
+                        )
+                        .unwrap();
+                }
+
+                egui_glium.paint(&display, &mut target);
+
+                // over gui layer
+
+                target.finish().unwrap();
+
+                prev_time = now;
+            }
+        };
+
         match ev {
-            glutin::event::Event::WindowEvent { event, .. } => match event {
-                glutin::event::WindowEvent::CloseRequested => {
-                    *control_flow = event_loop::ControlFlow::Exit;
+            Event::RedrawEventsCleared if cfg!(windows) => redraw(),
+            Event::RedrawRequested(_) if !cfg!(windows) => redraw(),
+
+            Event::WindowEvent { event, .. } => {
+                if matches!(event, WindowEvent::CloseRequested | WindowEvent::Destroyed) {
+                    *control_flow = glutin::event_loop::ControlFlow::Exit;
                     return;
                 }
-                glutin::event::WindowEvent::ModifiersChanged(state) => {
-                    scene.input_manager.modifiers = state;
+
+                let event_response = egui_glium.on_event(&event);
+
+                if event_response {
+                    display.gl_window().window().request_redraw();
                 }
+            }
+            Event::NewEvents(cause) => match cause {
+                event::StartCause::ResumeTimeReached { .. } => {
+                    display.gl_window().window().request_redraw();
+                }
+                event::StartCause::Init => {}
                 _ => return,
             },
-            glutin::event::Event::NewEvents(cause) => match cause {
-                glutin::event::StartCause::ResumeTimeReached { .. } => {}
-                glutin::event::StartCause::Init => {}
-                _ => return,
-            },
-            glutin::event::Event::DeviceEvent { event, .. } => match event {
-                glutin::event::DeviceEvent::Key(input) => match input.state {
-                    glutin::event::ElementState::Pressed => {
+            Event::DeviceEvent { event, .. } => match event {
+                event::DeviceEvent::Key(input) => match input.state {
+                    event::ElementState::Pressed => {
                         scene.input_manager.pressed_scancodes.insert(input.scancode);
                     }
-                    glutin::event::ElementState::Released => {
+                    event::ElementState::Released => {
                         scene
                             .input_manager
                             .pressed_scancodes
@@ -236,93 +360,6 @@ pub fn engine(mut scene: Scene) {
             },
             _ => {}
         }
-
-        let next_frame_time =
-            std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
-        *control_flow = event_loop::ControlFlow::WaitUntil(next_frame_time);
-        scene.delta_time = (now - prev_time).as_secs_f32();
-
-        let mut target = display.draw();
-        target.clear_color_and_depth((0.1, 0.2, 0.3, 1.0), 1.0);
-
-        t += scene.delta_time * 0.5;
-        // if t > 2.0 {
-        //     t = -2.0;
-        // }
-
-        let perspective = {
-            let (width, height) = target.get_dimensions();
-            let aspect_ratio = height as f32 / width as f32;
-
-            let fov: f32 = 3.141592 / 3.0;
-            let zfar = 1024.0;
-            let znear = 0.1;
-
-            let f = 1.0 / (fov / 2.0).tan();
-
-            [
-                [f * aspect_ratio, 0.0, 0.0, 0.0],
-                [0.0, f, 0.0, 0.0],
-                [0.0, 0.0, (zfar + znear) / (zfar - znear), 1.0],
-                [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
-            ]
-        };
-
-        let position_matrix = [
-            [t.cos(), 0.0, -t.sin(), 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [t.sin(), 0.0, t.cos(), 0.0],
-            [0.0, 0.0, 0.0, 1.0f32],
-        ];
-
-        // let matrix = [
-        //     [1.0, 0.0, 0.0, 0.0],
-        //     [0.0, 1.0, 0.0, 0.0],
-        //     [0.0, 0.0, 1.0, 0.0],
-        //     [0.0, 0.0, 5.0, 1.0f32],
-        // ];
-
-        let light = [0.0, 10.0, -5.0f32];
-
-        let params = glium::DrawParameters {
-            depth: glium::Depth {
-                test: glium::draw_parameters::DepthTest::IfLess,
-                write: true,
-                ..Default::default()
-            },
-            backface_culling: glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
-            ..Default::default()
-        };
-
-        let cam = scene.main_camera;
-
-        (cam.tick_update_func)(&mut scene);
-
-        let view = view_matrix(&cam.position, &cam.rotation, &cam.up_vector);
-
-        for object in &scene.game_objects {
-            target
-                .draw(
-                    (
-                        object.vertices.as_ref().unwrap(),
-                        object.normals.as_ref().unwrap(),
-                    ),
-                    object.indices.as_ref().unwrap(),
-                    &object.program.as_ref().unwrap(),
-                    &uniform! {
-                        position_matrix: position_matrix,
-                        u_light: light,
-                        perspective: perspective,
-                        view: view
-                    },
-                    &params,
-                )
-                .unwrap();
-        }
-
-        target.finish().unwrap();
-
-        prev_time = now;
     });
 }
 
