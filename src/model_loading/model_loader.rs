@@ -11,7 +11,7 @@ pub struct Model {
     pub indices: Vec<u16>,
 }
 
-pub(crate) fn get_obj(path:&str) -> Model {
+pub fn get_obj(path:&str) -> Model {
     let input = BufReader::new(File::open(path).unwrap());
     let loaded: Obj = load_obj(input).unwrap();
 

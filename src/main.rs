@@ -1,41 +1,29 @@
-
-use std::collections::HashSet;
-
-use copper_engine::{engine, Scene, InputManager, Camera};
-use glium::glutin;
-
-fn camera_tick_update(scene: &mut Scene){
-
-}
-
-fn camera_awake(scene: &mut Scene){
-
-}
+use copper_engine::{
+    blank_on_awake, blank_tick_update, engine, model_loading, Camera, InputManager, Object, Scene,
+};
+use model_loading::model_loader::get_obj;
 
 fn main() {
-    let mut input_manager = InputManager {
-        pressed_scancodes: HashSet::new(),
-        modifiers: glutin::event::ModifiersState::default(),
-    };
-
-    let mut main_camera = Camera{
-        z_near: 0.1,
-        z_far: 1024.0,
-        fov: 3.141592 / 3.0,
-        position: [0.0, 0.0, -10.0],
-        rotation: [0.0, 0.0, 1.0],
-        up_vector: [0.0, 1.0, 0.0],
-        tick_update_func: camera_tick_update,
-        on_awake: camera_awake
-    };
-
-    let mut scene = Scene{
-        game_objects: vec![],
-        input_manager: input_manager,
-        main_camera: main_camera,
-        delta_time: 0.0,
-        time_since_start: 0.0,
-    };
+    let input_manager = InputManager::new();
+    let main_camera = Camera::new(
+        0.1,
+        1024.0,
+        3.14159 / 3.0,
+        [0.0, 0.0, -10.0],
+        [0.0, 0.0, 1.0],
+        blank_tick_update,
+        blank_on_awake,
+    );
+    let dragon = Object::new(
+        "Dragon",
+        get_obj("models/stanford_dragon_low.obj"),
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        blank_tick_update,
+        blank_on_awake,
+    );
+    let scene: Scene = Scene::new(vec![dragon], input_manager, main_camera);
 
     engine(scene);
 }
