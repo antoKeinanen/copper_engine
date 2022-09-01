@@ -3,6 +3,7 @@ extern crate glium;
 
 extern crate image;
 
+use egui::vec2;
 use glium::{
     glutin::{
         self,
@@ -12,7 +13,7 @@ use glium::{
     },
     Display, IndexBuffer, Program, Surface, VertexBuffer,
 };
-use std::{collections::HashSet, default, fs};
+use std::{collections::HashSet, default, fmt::format, fs};
 use structs::vertex::{Normal, Vertex};
 
 mod structs;
@@ -57,7 +58,6 @@ impl Scene {
         }
     }
 }
-
 pub struct Object {
     pub name: String,
     pub model: Model,
@@ -202,6 +202,7 @@ pub fn engine(mut scene: Scene) {
     (scene.main_camera.on_awake)(&mut scene);
 
     let mut t = 0.5;
+    let mut drawn_frames = 0;
     event_loop.run(move |ev, _, control_flow| {
         let now = std::time::Instant::now();
         scene.time_since_start = (now - start_time).as_secs_f32();
@@ -210,12 +211,17 @@ pub fn engine(mut scene: Scene) {
             let mut quit = false;
 
             let repaint_after = egui_glium.run(&display, |egui_ctx| {
-                egui::SidePanel::left("my_side_panel").show(egui_ctx, |ui| {
-                    ui.heading("Hello World!");
-                    if ui.button("Quit").clicked() {
-                        quit = true;
-                    }
-                });
+                egui::Window::new("debug")
+                    .fixed_size(vec2(300f32, 300f32))
+                    .show(egui_ctx, |ui| {
+                        ui.label(format!(
+                            "Fps: {}",
+                            drawn_frames / ((now - start_time).as_secs() + 1)
+                        ));
+                        ui.label(format!("Frame: {}", drawn_frames));
+                        ui.label(format!("Delta time: {:.3}", scene.delta_time));
+                        ui.separator();
+                    });
             });
 
             *control_flow = if quit {
@@ -233,7 +239,7 @@ pub fn engine(mut scene: Scene) {
 
             {
                 let next_frame_time =
-                    std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
+                    std::time::Instant::now() + std::time::Duration::from_nanos(0); //<- FPS cap
                 *control_flow = event_loop::ControlFlow::WaitUntil(next_frame_time);
                 scene.delta_time = (now - prev_time).as_secs_f32();
 
@@ -317,6 +323,7 @@ pub fn engine(mut scene: Scene) {
 
                 target.finish().unwrap();
 
+                drawn_frames += 1;
                 prev_time = now;
             }
         };
