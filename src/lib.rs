@@ -13,17 +13,16 @@ use glium::{
     },
     Display, IndexBuffer, Program, Surface, VertexBuffer,
 };
-use std::{collections::HashSet, default, fmt::format, fs};
+use std::{collections::HashSet, fs};
 use structs::vertex::{Normal, Vertex};
 
 mod structs;
 
 pub mod model_loading;
-use crate::model_loading::model_loader::{get_obj, Model};
+use crate::model_loading::model_loader::{Model};
 
 //todo:
 //bind:
-// object
 // lights
 // mouse inputs
 //split:
@@ -62,7 +61,7 @@ impl Scene {
 pub struct Object {
     pub name: String,
     pub model: Model,
-    pub position: [f32; 3],
+    pub translation: [f32; 3],
     pub rotation: [f32; 3],
     pub scale: [f32; 3],
     pub tick_update_func: fn(&mut Scene),
@@ -87,7 +86,7 @@ impl Object {
         Self {
             name: String::from(name),
             model: model,
-            position: position,
+            translation: position,
             rotation: rotation,
             scale: scale,
             tick_update_func: tick_update_func,
@@ -149,11 +148,11 @@ impl Camera {
     }
 }
 
-pub fn blank_tick_update(scene: &mut Scene) {}
-pub fn blank_on_awake(scene: &mut Scene) {}
+pub fn blank_tick_update(_scene: &mut Scene) {}
+pub fn blank_on_awake(_scene: &mut Scene) {}
 
 pub fn engine(mut scene: Scene) {
-    let mut event_loop = EventLoop::new();
+    let event_loop = EventLoop::new();
     let wb = WindowBuilder::new().with_title("copper engine");
     let cb = glutin::ContextBuilder::new().with_depth_buffer(24);
     let display = Display::new(wb, cb, &event_loop).expect("Failed to init display");
@@ -209,7 +208,7 @@ pub fn engine(mut scene: Scene) {
         scene.time_since_start = (now - start_time).as_secs_f32();
 
         let mut redraw = || {
-            let mut quit = false;
+            let quit = false;
 
             let repaint_after = egui_glium.run(&display, |egui_ctx| {
                 egui::Window::new("debug")
@@ -224,7 +223,15 @@ pub fn engine(mut scene: Scene) {
                         ui.separator();
 
                         ui.collapsing(format!("Loaded objects: {}", scene.game_objects.len()), |ui| {
+                            for i in 0..scene.game_objects.len() {
+                                let object = &scene.game_objects[i];
 
+                                ui.collapsing(object.name.as_str(), |ui| {
+                                    ui.label(format!("Translation: {:.3?}", object.translation));
+                                    ui.label(format!("Rotation: {:.3?}", object.rotation));
+                                    ui.label(format!("Scale: {:.3?}", object.scale));
+                                });
+                            }
                         });
                     });
             });
@@ -301,7 +308,7 @@ pub fn engine(mut scene: Scene) {
                 }
 
                 for object in &mut scene.game_objects {
-                    let [tx, ty, tz] = object.position;
+                    let [tx, ty, tz] = object.translation;
                     let [sx, sy, sz] = object.scale;
                     let [rx, ry, rz] = object.rotation;
 
