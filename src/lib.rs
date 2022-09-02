@@ -58,6 +58,7 @@ impl Scene {
         }
     }
 }
+
 pub struct Object {
     pub name: String,
     pub model: Model,
@@ -221,6 +222,10 @@ pub fn engine(mut scene: Scene) {
                         ui.label(format!("Frame: {}", drawn_frames));
                         ui.label(format!("Delta time: {:.3}", scene.delta_time));
                         ui.separator();
+
+                        ui.collapsing(format!("Loaded objects: {}", scene.game_objects.len()), |ui| {
+
+                        });
                     });
             });
 
@@ -269,13 +274,6 @@ pub fn engine(mut scene: Scene) {
                     ]
                 };
 
-                let position_matrix = [
-                    [t.cos(), 0.0, -t.sin(), 0.0],
-                    [0.0, 1.0, 0.0, 0.0],
-                    [t.sin(), 0.0, t.cos(), 0.0],
-                    [0.0, 0.0, 0.0, 1.0f32],
-                ];
-
                 let light = [0.0, 10.0, -5.0f32];
 
                 let params = glium::DrawParameters {
@@ -297,7 +295,54 @@ pub fn engine(mut scene: Scene) {
 
                 // under gui layer
 
-                for object in &scene.game_objects {
+                for i in 0..scene.game_objects.len() {
+                    let object = &scene.game_objects[i];
+                    (object.tick_update_func)(&mut scene);
+                }
+
+                for object in &mut scene.game_objects {
+                    let [tx, ty, tz] = object.position;
+                    let [sx, sy, sz] = object.scale;
+                    let [rx, ry, rz] = object.rotation;
+
+                    //https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
+                    //TODO: check me
+                    let position_matrix = [
+                        [
+                            sx * rz.cos() * ry.cos(),
+                            rz.cos() * ry.sin() * rx.sin() - rz.sin() * rx.cos(),
+                            rz.cos() * ry.sin() * rx.cos() + rz.sin() * rx.sin(),
+                            0.0,
+                        ],
+                        [
+                            rz.sin() * ry.cos(),
+                            sy * rz.sin() * ry.sin() * rx.sin() + rz.cos() * rx.cos(),
+                            rz.sin() * ry.sin() * rx.sin() - rz.cos() * rx.sin(),
+                            0.0,
+                        ],
+                        [
+                            -ry.sin(),
+                            ry.cos() * rx.sin(),
+                            sz * ry.cos() * rx.cos(),
+                            0.0,
+                        ],
+                        [tx, ty, tz, 1.0f32],
+                    ];
+
+                    // let position_matrix = [
+                    //     [1.0, 0.0, 0.0, 0.0],
+                    //     [0.0, 1.0, 0.0, 0.0],
+                    //     [0.0, 0.0, 1.0, 0.0],
+                    //     [0.0, 0.0, 0.0, 1.0f32],
+                    // ];
+
+                    // let position_matrix = [
+                    //     [t.cos(), 0.0, -t.sin(), 0.0],
+                    //     [0.0, 1.0, 0.0, 0.0],
+                    //     [t.sin(), 0.0, t.cos(), 0.0],
+                    //     [0.0, 0.0, 0.0, 1.0f32],
+                    // ];
+
                     target
                         .draw(
                             (
