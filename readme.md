@@ -8,9 +8,9 @@ OpenGL based vertex renderer and game engine written in rust.
 - Movable camera
 - OBJ parser and loader
 - Keyboard input manager
-- Texture loading
+- Multiple objects
 - Update loop for camera and objects
-- On object awake call
+- On object or camera awake call
 
 ## Future features
 - Audio manager
