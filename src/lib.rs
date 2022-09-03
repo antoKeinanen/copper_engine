@@ -219,7 +219,8 @@ pub fn engine(mut scene: Scene) {
                             drawn_frames / ((now - start_time).as_secs() + 1)
                         ));
                         ui.label(format!("Frame: {}", drawn_frames));
-                        ui.label(format!("Delta time: {:.3}", scene.delta_time));
+                        ui.label(format!("Delta time: {:.5}", scene.delta_time));
+
                         ui.separator();
 
                         ui.collapsing(format!("Loaded objects: {}", scene.game_objects.len()), |ui| {
@@ -230,6 +231,12 @@ pub fn engine(mut scene: Scene) {
                                     ui.label(format!("Translation: {:.3?}", object.translation));
                                     ui.label(format!("Rotation: {:.3?}", object.rotation));
                                     ui.label(format!("Scale: {:.3?}", object.scale));
+                                    
+                                    ui.separator();
+
+                                    ui.label(format!("Vertices: {}", object.model.positions.len()));
+                                    ui.label(format!("Indices: {}", object.model.indices.len()));
+                                    ui.label(format!("Normals: {}", object.model.normals.len()));
                                 });
                             }
                         });
