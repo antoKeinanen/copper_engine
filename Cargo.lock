@@ -279,6 +279,7 @@ dependencies = [
  "glium",
  "image",
  "obj-rs",
+ "soloud",
 ]
 
 [[package]]
@@ -1379,6 +1380,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "paste"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1de2e551fb905ac83f73f7aedf2f0cb4a0da7e35efa24a202a936269f1f18e1"
+
+[[package]]
 name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1655,6 +1662,26 @@ checksum = "0a345c870a1fae0b1b779085e81b51e614767c239e93503588e54c5b17f4b0e8"
 dependencies = [
  "smithay-client-toolkit",
  "wayland-client",
+]
+
+[[package]]
+name = "soloud"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68b27367e7bceeceb167477f3d0dc633bb822327b44dceb59d5814ee7788f9a3"
+dependencies = [
+ "bitflags",
+ "paste",
+ "soloud-sys",
+]
+
+[[package]]
+name = "soloud-sys"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "507a862f3ce15071b74bc8e8e4c40dfa9f6c44fc3b96e60cb55b5aad08333727"
+dependencies = [
+ "cmake",
 ]
 
 [[package]]
