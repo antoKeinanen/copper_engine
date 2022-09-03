@@ -13,7 +13,7 @@ use glium::{
     Display, Surface,
 };
 use soloud::{AudioExt, Soloud};
-use std::fs;
+use std::{fmt::format, fs};
 use structs::scene::Scene;
 
 pub use structs::*;
@@ -27,8 +27,7 @@ pub mod structs;
 // mouse inputs
 //other:
 // create promo game
-// sound
-// better lighting
+// better rendering
 // texture and normal map loading
 // material creator
 
@@ -114,7 +113,7 @@ pub fn engine(mut scene: Scene) {
                             drawn_frames / ((now - start_time).as_secs() + 1)
                         ));
                         ui.label(format!("Frame: {}", drawn_frames));
-                        ui.label(format!("Delta time: {:.5}", scene.delta_time));
+                        ui.label(format!("Delta time: {:.10}", scene.delta_time));
 
                         ui.separator();
 
@@ -150,6 +149,21 @@ pub fn engine(mut scene: Scene) {
                                 }
                             },
                         );
+
+                        ui.separator();
+
+                        ui.collapsing("Audio", |ui| {
+                            ui.label(format!("Global: {}", scene.global_audio_sources.len()));
+                            ui.collapsing(
+                                format!("Local sources: {}", scene.local_audio_sources.len()),
+                                |ui| {
+                                    for i in 0..scene.local_audio_sources.len() {
+                                        let src = &scene.local_audio_sources[i];
+                                        ui.label(format!("{:.2?}: {}", src.position, src.triggered));
+                                    }
+                                },
+                            );
+                        })
                     });
             });
 

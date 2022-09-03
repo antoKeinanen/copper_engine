@@ -28,7 +28,7 @@ fn main() {
         blank_on_awake,
     );
 
-    let audio_source = AudioSourceLocal::new("audio/beep2.wav", 1.0, true, [10.0, 0.0, 0.0], 50.0);
+    let audio_source = AudioSourceLocal::new("audio/beep2.wav", 1.0, false, [10.0, 0.0, 0.0], 50.0);
 
     let scene: Scene = Scene::new(
         vec![dragon],
