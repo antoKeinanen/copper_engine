@@ -11,10 +11,11 @@ OpenGL based vertex renderer and game engine written in rust.
 - Multiple objects
 - Update loop for camera and objects
 - On object or camera awake call
+- Audio manager
 
 ## Future features
-- Audio manager
 - Mouse input manager
 - Multiple lights
+- Sky boxes and environment map support
 - Global illumination
 - Normal mapping
