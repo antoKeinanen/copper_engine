@@ -1,5 +1,6 @@
-use std::collections::HashSet;
+//! Input manager is responsible of storing user input.
 
+use std::collections::HashSet;
 use glium::glutin::event;
 
 /// # Fields

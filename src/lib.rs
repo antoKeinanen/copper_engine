@@ -24,9 +24,6 @@ pub mod structs;
 //bind:
 // lights
 // mouse inputs
-//split:
-// update loop
-// awake call
 //other:
 // create promo game
 // sound
@@ -34,7 +31,9 @@ pub mod structs;
 // texture and normal map loading
 // material creator
 
+/// Blank template for tick update. Does not do anything, but fulfills the type requirements.
 pub fn blank_tick_update(_scene: &mut Scene) {}
+/// Blank template for on awake. Does not do anything, but fulfills the type requirements.
 pub fn blank_on_awake(_scene: &mut Scene) {}
 
 

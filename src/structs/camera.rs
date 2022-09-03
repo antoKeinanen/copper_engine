@@ -1,4 +1,7 @@
+//! Camera is the main component responsible of rendering objects to the screen.
+
 use super::scene::Scene;
+
 /// #  Fields
 /// - z_near: Distance of the near clipping plane on z-axis.
 /// - z_far: Distance of the far clipping plane on z-axis.

@@ -1,3 +1,5 @@
+//! Scene is collection of everything copper engine needs to function. 
+
 use super::{object::Object, input_manager::InputManager, camera::Camera};
 
 /// # Fields
