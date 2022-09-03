@@ -15,6 +15,8 @@ use glium::{
 use std::fs;
 use structs::scene::Scene;
 
+pub use structs::*;
+
 pub mod model_loading;
 pub mod structs;
 

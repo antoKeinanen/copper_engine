@@ -1,7 +1,8 @@
 use std::f32::consts::PI;
 
 use copper_engine::{
-    blank_on_awake, blank_tick_update, engine, structs::{camera::{Camera}, input_manager::InputManager, object::Object, scene::Scene}, model_loading
+    blank_on_awake, blank_tick_update, engine, model_loading, structs::Scene, Camera, InputManager,
+    Object,
 };
 use model_loading::model_loader::get_obj;
 
@@ -35,11 +36,11 @@ fn main() {
 fn dragon_tick_update(scene: &mut Scene) {
     scene.game_objects[0].rotation[0] = scene.game_objects[0].rotation[0] + 1.0 * scene.delta_time;
     scene.game_objects[0].rotation[1] = scene.game_objects[0].rotation[1] + 1.0 * scene.delta_time;
-    
-    if scene.game_objects[0].rotation[0] > 2.0*PI {
+
+    if scene.game_objects[0].rotation[0] > 2.0 * PI {
         scene.game_objects[0].rotation[0] = 0.0;
     }
-    if scene.game_objects[0].rotation[1] > 2.0*PI {
+    if scene.game_objects[0].rotation[1] > 2.0 * PI {
         scene.game_objects[0].rotation[1] = 0.0;
     }
 }
