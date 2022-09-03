@@ -4,7 +4,7 @@ authors = ["Anto Keinänen"]
 version = "0.0.1"
 edition = "2021"
 description = "Basic game engine library for simple 3d games."
-license = "MIT"
+license = "GPL-2.0"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
