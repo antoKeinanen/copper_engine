@@ -1,7 +1,11 @@
 [package]
 name = "copper_engine"
-version = "0.1.0"
+authors = ["Anto Keinänen"]
+version = "0.0.1"
 edition = "2021"
+description = "Basic game engine library for simple 3d games."
+license = "MIT"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
