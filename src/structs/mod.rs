@@ -1,14 +1,13 @@
 pub mod vertex;
-pub use vertex::{Normal, Vertex};
-
 pub mod camera;
-pub use camera::Camera;
-
 pub mod input_manager;
-pub use input_manager::InputManager;
-
 pub mod object;
-pub use object::Object;
-
 pub mod scene;
+pub mod audio_source;
+
+pub use vertex::{Normal, Vertex};
+pub use camera::Camera;
+pub use input_manager::InputManager;
+pub use object::Object;
 pub use scene::Scene;
+pub use audio_source::AudioSource;

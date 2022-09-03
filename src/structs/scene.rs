@@ -1,5 +1,7 @@
 //! Scene is collection of everything copper engine needs to function. 
 
+use crate::AudioSource;
+
 use super::{object::Object, input_manager::InputManager, camera::Camera};
 
 /// # Fields
@@ -12,6 +14,7 @@ use super::{object::Object, input_manager::InputManager, camera::Camera};
 /// Usage of `::new()` is strongly recommended!
 pub struct Scene {
     pub game_objects: Vec<Object>,
+    pub audio_sources: Vec<AudioSource>,
     pub input_manager: InputManager,
     pub main_camera: Camera,
     pub delta_time: f32,
@@ -28,9 +31,10 @@ impl Scene {
     /// let scene: Scene = Scene::new(vec![model], input_manager, main_camera);
     /// ```
 
-    pub fn new(objects: Vec<Object>, input_manager: InputManager, main_camera: Camera) -> Self {
+    pub fn new(objects: Vec<Object>, audio_sources:Vec<AudioSource>, input_manager: InputManager, main_camera: Camera) -> Self {
         Self {
             game_objects: objects,
+            audio_sources: audio_sources,
             input_manager: input_manager,
             main_camera: main_camera,
             delta_time: 0.0,

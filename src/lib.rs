@@ -12,7 +12,8 @@ use glium::{
     },
     Display, Surface,
 };
-use std::fs;
+use soloud::{Soloud, AudioExt};
+use std::{fs};
 use structs::scene::Scene;
 
 pub use structs::*;
@@ -45,6 +46,8 @@ pub fn engine(mut scene: Scene) {
     let display = Display::new(wb, cb, &event_loop).expect("Failed to init display");
 
     let mut egui_glium = egui_glium::EguiGlium::new(&display, &event_loop);
+
+    let sl = Soloud::default().unwrap();
 
     let vertex_shader_src = fs::read_to_string("shaders/vertex_shader.glsl").expect("");
     let vertex_shader_src = vertex_shader_src.as_str();
@@ -87,6 +90,8 @@ pub fn engine(mut scene: Scene) {
     // let image =
     //     glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
     // let texture = glium::texture::SrgbTexture2d::new(&display, image).unwrap();
+
+    //scene.player.as_ref().unwrap().play(&scene.audio_sources[0].sound);
 
     let mut prev_time = std::time::Instant::now();
     let start_time = std::time::Instant::now();
@@ -276,6 +281,19 @@ pub fn engine(mut scene: Scene) {
                         .unwrap();
                 }
 
+                for i in 0..scene.audio_sources.len() {
+                    let mut audio_source = &mut scene.audio_sources[i];
+
+                    if audio_source.triggered {
+                        audio_source.sound.set_volume(audio_source.volume);
+
+                        sl.play(&audio_source.sound);
+                        audio_source.triggered = false;
+                    }
+
+                }
+
+
                 egui_glium.paint(&display, &mut target);
 
                 // over gui layer
@@ -297,7 +315,6 @@ pub fn engine(mut scene: Scene) {
                 }
                 WindowEvent::ModifiersChanged(m) => {
                     scene.input_manager.modifiers = m;
-                    println!("{:?}", scene.input_manager.modifiers)
                 }
                 _ => {
                     let event_response = egui_glium.on_event(&event);
