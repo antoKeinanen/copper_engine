@@ -1,8 +1,8 @@
 use std::f32::consts::PI;
 
 use copper_engine::{
-    blank_on_awake, blank_tick_update, engine, model_loading, structs::Scene, Camera, InputManager,
-    Object, AudioSource
+    blank_on_awake, blank_tick_update, engine, model_loading, structs::Scene,
+    AudioSourceLocal, Camera, InputManager, Object,
 };
 use model_loading::model_loader::get_obj;
 
@@ -28,9 +28,15 @@ fn main() {
         blank_on_awake,
     );
 
-    let audio_source = AudioSource::new("audio/music.mp3", 1.0, true);
+    let audio_source = AudioSourceLocal::new("audio/beep2.wav", 1.0, true, [10.0, 0.0, 0.0], 50.0);
 
-    let scene: Scene = Scene::new(vec![dragon],vec![audio_source], input_manager, main_camera);
+    let scene: Scene = Scene::new(
+        vec![dragon],
+        vec![audio_source],
+        vec![],
+        input_manager,
+        main_camera,
+    );
 
     engine(scene);
 }

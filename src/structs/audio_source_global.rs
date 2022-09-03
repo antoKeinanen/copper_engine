@@ -9,13 +9,13 @@ use std::path::Path;
 /// - volume: Volume of the sound where `1.0` is normal.
 /// - triggered: Bool indicating if the audio will be plaid this cycle.
 /// Usage of `::new()` is strongly recommended!
-pub struct AudioSource {
+pub struct AudioSourceGlobal {
     pub sound: Wav,
     pub volume: f32,
     pub triggered: bool,
 }
 
-impl AudioSource {
+impl AudioSourceGlobal {
     /// Supported formats: wav, mp3, ogg, and flac.
     /// # Errors
     /// - i/o error
@@ -25,7 +25,7 @@ impl AudioSource {
     ///
     /// # Examples
     /// ```
-    /// let audio_source = AudioSource::new("path/to/music.mp3", 1.0, true);
+    /// let audio_source = AudioSourceGlobal::new("path/to/music.mp3", 1.0, true);
     /// ```
     pub fn new(path: &str, volume: f32, play_on_awake: bool) -> Self {
         let mut sound = audio::Wav::default();

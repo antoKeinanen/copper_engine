@@ -1,4 +1,4 @@
-//! Camera is the main component responsible of rendering objects to the screen.
+//! Camera is the main component responsible of rendering objects to the screen. Cameras are also the main audio listener of the scene.
 
 use super::scene::Scene;
 

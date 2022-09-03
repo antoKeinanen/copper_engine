@@ -12,8 +12,8 @@ use glium::{
     },
     Display, Surface,
 };
-use soloud::{Soloud, AudioExt};
-use std::{fs};
+use soloud::{AudioExt, Soloud};
+use std::fs;
 use structs::scene::Scene;
 
 pub use structs::*;
@@ -36,7 +36,6 @@ pub mod structs;
 pub fn blank_tick_update(_scene: &mut Scene) {}
 /// Blank template for on awake. Does not do anything, but fulfills the type requirements.
 pub fn blank_on_awake(_scene: &mut Scene) {}
-
 
 /// Main loop of the engine.
 pub fn engine(mut scene: Scene) {
@@ -281,8 +280,8 @@ pub fn engine(mut scene: Scene) {
                         .unwrap();
                 }
 
-                for i in 0..scene.audio_sources.len() {
-                    let mut audio_source = &mut scene.audio_sources[i];
+                for i in 0..scene.global_audio_sources.len() {
+                    let mut audio_source = &mut scene.global_audio_sources[i];
 
                     if audio_source.triggered {
                         audio_source.sound.set_volume(audio_source.volume);
@@ -290,9 +289,25 @@ pub fn engine(mut scene: Scene) {
                         sl.play(&audio_source.sound);
                         audio_source.triggered = false;
                     }
-
                 }
 
+                for i in 0..scene.local_audio_sources.len() {
+                    let mut audio_source = &mut scene.local_audio_sources[i];
+
+                    if audio_source.triggered {
+                        audio_source.sound.set_volume(audio_source.volume);
+                        let am = audio_source.amplifier;
+
+                        let [x, y, z] = audio_source.position;
+                        let [cx, cy, cz] = scene.main_camera.position;
+                        let [dx, dy, dz] = [(x - cx) * am, (y - cy) * am, (z - cz) * am];
+
+                        sl.play_3d(&audio_source.sound, dx, dy, dz);
+                        audio_source.triggered = false;
+
+                        println!("{}, {}, {}", dx, dy, dz);
+                    }
+                }
 
                 egui_glium.paint(&display, &mut target);
 
@@ -304,11 +319,10 @@ pub fn engine(mut scene: Scene) {
             }
         };
 
-        
         match ev {
             Event::RedrawEventsCleared if cfg!(windows) => redraw(),
             Event::RedrawRequested(_) if !cfg!(windows) => redraw(),
-            
+
             Event::WindowEvent { event, .. } => match event {
                 WindowEvent::CloseRequested | WindowEvent::Destroyed => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
