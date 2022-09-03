@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate glium;
-
 extern crate image;
 
 use egui::vec2;
@@ -11,24 +10,19 @@ use glium::{
         event_loop::{self, EventLoop},
         window::WindowBuilder,
     },
-    Display, IndexBuffer, Program, Surface, VertexBuffer,
+    Display, Surface,
 };
-use std::{collections::HashSet, fs};
-use structs::vertex::{Normal, Vertex};
-
-mod structs;
+use std::fs;
+use structs::scene::Scene;
 
 pub mod model_loading;
-use crate::model_loading::model_loader::{Model};
+pub mod structs;
 
 //todo:
 //bind:
 // lights
 // mouse inputs
 //split:
-// world object system
-// renderer
-// input
 // update loop
 // awake call
 //other:
@@ -38,119 +32,11 @@ use crate::model_loading::model_loader::{Model};
 // texture and normal map loading
 // material creator
 
-pub struct Scene {
-    pub game_objects: Vec<Object>,
-    pub input_manager: InputManager,
-    pub main_camera: Camera,
-    pub delta_time: f32,
-    pub time_since_start: f32,
-}
-
-impl Scene {
-    pub fn new(objects: Vec<Object>, input_manager: InputManager, main_camera: Camera) -> Self {
-        Self {
-            game_objects: objects,
-            input_manager: input_manager,
-            main_camera: main_camera,
-            delta_time: 0.0,
-            time_since_start: 0.0,
-        }
-    }
-}
-
-pub struct Object {
-    pub name: String,
-    pub model: Model,
-    pub translation: [f32; 3],
-    pub rotation: [f32; 3],
-    pub scale: [f32; 3],
-    pub tick_update_func: fn(&mut Scene),
-    pub on_awake: fn(&mut Scene),
-
-    program: Option<Program>,
-    vertices: Option<VertexBuffer<Vertex>>,
-    normals: Option<VertexBuffer<Normal>>,
-    indices: Option<IndexBuffer<u16>>,
-}
-
-impl Object {
-    pub fn new(
-        name: &str,
-        model: Model,
-        position: [f32; 3],
-        rotation: [f32; 3],
-        scale: [f32; 3],
-        tick_update_func: fn(&mut Scene),
-        on_awake: fn(&mut Scene),
-    ) -> Self {
-        Self {
-            name: String::from(name),
-            model: model,
-            translation: position,
-            rotation: rotation,
-            scale: scale,
-            tick_update_func: tick_update_func,
-            on_awake: on_awake,
-            program: None,
-            vertices: None,
-            normals: None,
-            indices: None,
-        }
-    }
-}
-
-pub struct InputManager {
-    pub pressed_scancodes: HashSet<u32>,
-    pub modifiers: event::ModifiersState,
-}
-
-impl InputManager {
-    pub fn new() -> Self {
-        Self {
-            pressed_scancodes: HashSet::new(),
-            modifiers: event::ModifiersState::default(),
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct Camera {
-    pub z_near: f32,
-    pub z_far: f32,
-    pub fov: f32,
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
-    pub up_vector: [f32; 3],
-    pub tick_update_func: fn(&mut Scene),
-    pub on_awake: fn(&mut Scene),
-}
-
-impl Camera {
-    pub fn new(
-        near: f32,
-        far: f32,
-        fov: f32,
-        position: [f32; 3],
-        rotation: [f32; 3],
-        tick_update_func: fn(&mut Scene),
-        on_awake: fn(&mut Scene),
-    ) -> Self {
-        Self {
-            z_near: near,
-            z_far: far,
-            fov: fov,
-            position: position,
-            rotation: rotation,
-            up_vector: [0.0, 1.0, 0.0],
-            tick_update_func: tick_update_func,
-            on_awake: on_awake,
-        }
-    }
-}
-
 pub fn blank_tick_update(_scene: &mut Scene) {}
 pub fn blank_on_awake(_scene: &mut Scene) {}
 
+
+/// Main loop of the engine.
 pub fn engine(mut scene: Scene) {
     let event_loop = EventLoop::new();
     let wb = WindowBuilder::new().with_title("copper engine");
@@ -185,6 +71,11 @@ pub fn engine(mut scene: Scene) {
         );
     }
 
+    for i in 0..scene.game_objects.len() {
+        let object = &scene.game_objects[i];
+        (object.on_awake)(&mut scene);
+    }
+
     // let image = image::load(
     //     Cursor::new(&include_bytes!("../textures/test.jpg")),
     //     image::ImageFormat::Jpeg,
@@ -201,7 +92,6 @@ pub fn engine(mut scene: Scene) {
 
     (scene.main_camera.on_awake)(&mut scene);
 
-    let mut t = 0.5;
     let mut drawn_frames = 0;
     event_loop.run(move |ev, _, control_flow| {
         let now = std::time::Instant::now();
@@ -223,23 +113,38 @@ pub fn engine(mut scene: Scene) {
 
                         ui.separator();
 
-                        ui.collapsing(format!("Loaded objects: {}", scene.game_objects.len()), |ui| {
-                            for i in 0..scene.game_objects.len() {
-                                let object = &scene.game_objects[i];
+                        ui.collapsing(
+                            format!("Loaded objects: {}", scene.game_objects.len()),
+                            |ui| {
+                                for i in 0..scene.game_objects.len() {
+                                    let object = &scene.game_objects[i];
 
-                                ui.collapsing(object.name.as_str(), |ui| {
-                                    ui.label(format!("Translation: {:.3?}", object.translation));
-                                    ui.label(format!("Rotation: {:.3?}", object.rotation));
-                                    ui.label(format!("Scale: {:.3?}", object.scale));
-                                    
-                                    ui.separator();
+                                    ui.collapsing(object.name.as_str(), |ui| {
+                                        ui.label(format!(
+                                            "Translation: {:.3?}",
+                                            object.translation
+                                        ));
+                                        ui.label(format!("Rotation: {:.3?}", object.rotation));
+                                        ui.label(format!("Scale: {:.3?}", object.scale));
 
-                                    ui.label(format!("Vertices: {}", object.model.positions.len()));
-                                    ui.label(format!("Indices: {}", object.model.indices.len()));
-                                    ui.label(format!("Normals: {}", object.model.normals.len()));
-                                });
-                            }
-                        });
+                                        ui.separator();
+
+                                        ui.label(format!(
+                                            "Vertices: {}",
+                                            object.model.positions.len()
+                                        ));
+                                        ui.label(format!(
+                                            "Indices: {}",
+                                            object.model.indices.len()
+                                        ));
+                                        ui.label(format!(
+                                            "Normals: {}",
+                                            object.model.normals.len()
+                                        ));
+                                    });
+                                }
+                            },
+                        );
                     });
             });
 
@@ -264,11 +169,6 @@ pub fn engine(mut scene: Scene) {
 
                 let mut target = display.draw();
                 target.clear_color_and_depth((0.1, 0.2, 0.3, 1.0), 1.0);
-
-                t += scene.delta_time * 0.5;
-                // if t > 2.0 {
-                //     t = -2.0;
-                // }
 
                 let perspective = {
                     let (width, height) = target.get_dimensions();
@@ -320,7 +220,6 @@ pub fn engine(mut scene: Scene) {
                     let [rx, ry, rz] = object.rotation;
 
                     //https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
-                    //TODO: check me
                     let position_matrix = [
                         [
                             sx * rz.cos() * ry.cos(),
@@ -383,26 +282,30 @@ pub fn engine(mut scene: Scene) {
                 target.finish().unwrap();
 
                 drawn_frames += 1;
-                prev_time = now;
             }
         };
 
+        
         match ev {
             Event::RedrawEventsCleared if cfg!(windows) => redraw(),
             Event::RedrawRequested(_) if !cfg!(windows) => redraw(),
-
-            Event::WindowEvent { event, .. } => {
-                if matches!(event, WindowEvent::CloseRequested | WindowEvent::Destroyed) {
+            
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::CloseRequested | WindowEvent::Destroyed => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
-                    return;
                 }
-
-                let event_response = egui_glium.on_event(&event);
-
-                if event_response {
-                    display.gl_window().window().request_redraw();
+                WindowEvent::ModifiersChanged(m) => {
+                    scene.input_manager.modifiers = m;
+                    println!("{:?}", scene.input_manager.modifiers)
                 }
-            }
+                _ => {
+                    let event_response = egui_glium.on_event(&event);
+
+                    if event_response {
+                        display.gl_window().window().request_redraw();
+                    }
+                }
+            },
             Event::NewEvents(cause) => match cause {
                 event::StartCause::ResumeTimeReached { .. } => {
                     display.gl_window().window().request_redraw();
@@ -426,6 +329,7 @@ pub fn engine(mut scene: Scene) {
             },
             _ => {}
         }
+        prev_time = now;
     });
 }
 
