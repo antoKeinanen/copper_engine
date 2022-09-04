@@ -20,7 +20,7 @@ fn main() {
 
     let dragon = Object::new(
         "Dragon",
-        get_obj("models/stanford_dragon_low.obj"),
+        get_obj("models/high_res_speher.obj"),
         [0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0],
         [1.0, 1.0, 1.0],

@@ -13,7 +13,7 @@ use glium::{
     Display, Surface,
 };
 use soloud::{AudioExt, Soloud};
-use std::{fmt::format, fs};
+use std::{fs};
 use structs::scene::Scene;
 
 pub use structs::*;
@@ -318,8 +318,6 @@ pub fn engine(mut scene: Scene) {
 
                         sl.play_3d(&audio_source.sound, dx, dy, dz);
                         audio_source.triggered = false;
-
-                        println!("{}, {}, {}", dx, dy, dz);
                     }
                 }
 
