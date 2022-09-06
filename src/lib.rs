@@ -13,7 +13,7 @@ use glium::{
     Display, Surface,
 };
 use soloud::{AudioExt, Soloud};
-use std::{fs};
+use std::fs;
 use structs::scene::Scene;
 
 pub use structs::*;
@@ -24,7 +24,6 @@ pub mod structs;
 //todo:
 //bind:
 // lights
-// mouse inputs
 //other:
 // create promo game
 // better rendering
@@ -159,7 +158,10 @@ pub fn engine(mut scene: Scene) {
                                 |ui| {
                                     for i in 0..scene.local_audio_sources.len() {
                                         let src = &scene.local_audio_sources[i];
-                                        ui.label(format!("{:.2?}: {}", src.position, src.triggered));
+                                        ui.label(format!(
+                                            "{:.2?}: {}",
+                                            src.position, src.triggered
+                                        ));
                                     }
                                 },
                             );
@@ -261,20 +263,6 @@ pub fn engine(mut scene: Scene) {
                         [tx, ty, tz, 1.0f32],
                     ];
 
-                    // let position_matrix = [
-                    //     [1.0, 0.0, 0.0, 0.0],
-                    //     [0.0, 1.0, 0.0, 0.0],
-                    //     [0.0, 0.0, 1.0, 0.0],
-                    //     [0.0, 0.0, 0.0, 1.0f32],
-                    // ];
-
-                    // let position_matrix = [
-                    //     [t.cos(), 0.0, -t.sin(), 0.0],
-                    //     [0.0, 1.0, 0.0, 0.0],
-                    //     [t.sin(), 0.0, t.cos(), 0.0],
-                    //     [0.0, 0.0, 0.0, 1.0f32],
-                    // ];
-
                     target
                         .draw(
                             (
@@ -341,6 +329,9 @@ pub fn engine(mut scene: Scene) {
                 }
                 WindowEvent::ModifiersChanged(m) => {
                     scene.input_manager.modifiers = m;
+                }
+                WindowEvent::CursorMoved { position, .. } => {
+                    scene.input_manager.mouse_position = [position.x, position.y];
                 }
                 _ => {
                     let event_response = egui_glium.on_event(&event);
