@@ -50,6 +50,11 @@ pub fn get_obj(path: &str) -> Model {
     }
 
     for ind in m_ind {
+        assert!(
+            *ind >= u16::MIN.into() && *ind <= u16::MAX.into(),
+            "Failed to parse obj {}, file is too large!",
+            path
+        );
         indices.push(*ind as u16);
     }
 
@@ -59,42 +64,3 @@ pub fn get_obj(path: &str) -> Model {
         indices,
     }
 }
-
-// let (models, materials) =
-// tobj::load_obj(&path, &tobj::LoadOptions::default()).expect("Failed to load OBJ file.");
-
-// //let materials = Material::default();
-
-// let mp = &models[0].mesh.positions;
-// let mn = &models[0].mesh.normals;
-// let mi = &models[0].mesh.indices;
-
-// let mut positions: Vec<Vertex> = vec![];
-
-// assert!(mp.len() % 3 == 0);
-
-// for vtx in 0..mp.len() / 3 {
-// positions.push(Vertex {
-//     position: [mp[3 * vtx], mp[3 * vtx + 1], mp[3 * vtx + 2]],
-// });
-// }
-
-// assert!(mn.len() % 3 == 0);
-
-// let mut normals: Vec<Normal> = vec![];
-// for nor in 0..mn.len() / 3 {
-// normals.push(Normal {
-//     normal: [mn[3 * nor], mn[3 * nor + 1], mn[3 * nor + 2]],
-// });
-// }
-
-// let mut indices: Vec<u16> = vec![];
-// for ind in mi {
-// indices.push(*ind as u16);
-// }
-
-// Model {
-// positions,
-// normals,
-// indices,
-// }
