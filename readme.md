@@ -1,6 +1,11 @@
 # Copper Engine
 OpenGL based vertex renderer and game engine written in rust.
 
+## Examples
+The source code of examples can be found at /examples and they can be run with `cargo run --example`.
+
+*Note that any extra dependencies other than `copper_engine` are not required unless specified at the start of example source code.*
+
 ## Features
 - Phong shading
 - Entity component system
