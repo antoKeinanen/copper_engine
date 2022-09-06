@@ -10,12 +10,34 @@ pub struct Model {
 
 /// loads and parses wavefront OBJ file into copper engine compatible format.
 ///
+/// # Errors
+/// - Object parsing is failed:
+///     - OpenFileFailed
+///     - ReadError
+///     - UnrecognizedCharacter
+///     - PositionParseError
+///     - NormalParseError
+///     - TexcoordParseError
+///     - FaceParseError
+///     - MaterialParseError
+///     - InvalidObjectName
+///     - InvalidPolygon
+///     - FaceVertexOutOfBounds
+///     - FaceTexCoordOutOfBounds
+///     - FaceNormalOutOfBounds
+///     - FaceColorOutOfBounds
+///     - InvalidLoadOptionConfig
+///     - GenericFailure
+/// - Vertexes have been parsed invalidly
+/// - Normals have been parsed invalidly
+/// - Models indices exceed u16 max limit *65 535* or are smaller than *0*
+///
 /// # Examples
 /// ```
 /// let model = get_obj("path/to/the/model.obj");
 /// ```
 pub fn get_obj(path: &str) -> Model {
-    let (models, materials) = tobj::load_obj(
+    let (models, _materials) = tobj::load_obj(
         path,
         &tobj::LoadOptions {
             single_index: true,
@@ -34,8 +56,16 @@ pub fn get_obj(path: &str) -> Model {
     let mut normals: Vec<Normal> = vec![];
     let mut indices: Vec<u16> = vec![];
 
-    assert!(m_vtx.len() % 3 == 0);
-    assert!(m_nor.len() % 3 == 0);
+    assert!(
+        m_vtx.len() % 3 == 0,
+        "Vertexes of object: {}, was parsed invalidly.",
+        path
+    );
+    assert!(
+        m_nor.len() % 3 == 0,
+        "Normals of object: {}, was parsed invalidly.",
+        path
+    );
 
     for vtx in 0..m_vtx.len() / 3 {
         vertexes.push(Vertex {
