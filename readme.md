@@ -13,6 +13,7 @@ OpenGL based vertex renderer and game engine written in rust.
 - Update loop for camera and objects
 - On object or camera awake call
 - Audio manager
+- Custom coloured material support
 
 ## Future features
 - Multiple lights

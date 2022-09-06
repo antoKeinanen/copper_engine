@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use copper_engine::{
     blank_on_awake, blank_tick_update, engine, model_loading, structs::Scene,
-    Camera, InputManager, Object,
+    Camera, InputManager, Object, Material,
 };
 use model_loading::model_loader::get_obj;
 
@@ -24,6 +24,7 @@ fn main() {
         [0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0],
         [1.0, 1.0, 1.0],
+        Material{ ambient_color: [0.0, 0.2, 0.3]},
         dragon_tick_update,
         blank_on_awake,
     );
@@ -49,4 +50,6 @@ fn dragon_tick_update(scene: &mut Scene) {
     if scene.game_objects[0].rotation[1] > 2.0 * PI {
         scene.game_objects[0].rotation[1] = 0.0;
     }
+
+
 }

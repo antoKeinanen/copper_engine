@@ -1,7 +1,7 @@
 //! Object is 3d model with translation, scale, and rotation in scene space.  
 
 use glium::{IndexBuffer, Program, VertexBuffer};
-use crate::model_loading::model_loader::Model;
+use crate::{model_loading::model_loader::Model, Material, material};
 use super::{
     scene::Scene,
     vertex::{Normal, Vertex},
@@ -25,6 +25,8 @@ pub struct Object {
     pub scale: [f32; 3],
     pub tick_update_func: fn(&mut Scene),
     pub on_awake: fn(&mut Scene),
+
+    pub material: Material,
 
     pub(crate) program: Option<Program>,
     pub(crate) vertices: Option<VertexBuffer<Vertex>>,
@@ -54,6 +56,7 @@ impl Object {
         position: [f32; 3],
         rotation: [f32; 3],
         scale: [f32; 3],
+        material: Material,
         tick_update_func: fn(&mut Scene),
         on_awake: fn(&mut Scene),
     ) -> Self {
@@ -63,6 +66,7 @@ impl Object {
             translation: position,
             rotation: rotation,
             scale: scale,
+            material,
             tick_update_func: tick_update_func,
             on_awake: on_awake,
 

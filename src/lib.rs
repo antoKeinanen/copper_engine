@@ -22,13 +22,10 @@ pub mod model_loading;
 pub mod structs;
 
 //todo:
-//bind:
-// lights
 //other:
 // create promo game
 // better rendering
 // texture and normal map loading
-// material creator
 
 /// Blank template for tick update. Does not do anything, but fulfills the type requirements.
 pub fn blank_tick_update(_scene: &mut Scene) {}
@@ -263,6 +260,12 @@ pub fn engine(mut scene: Scene) {
                         [tx, ty, tz, 1.0f32],
                     ];
 
+                    let ambient = object.material.ambient_color;
+                    let mut diffuse = [0.0f32; 3];
+                    for i in 0..3 {
+                        diffuse[i] = ambient[i] * 2.0;
+                    }
+
                     target
                         .draw(
                             (
@@ -274,6 +277,8 @@ pub fn engine(mut scene: Scene) {
                             &uniform! {
                                 position_matrix: position_matrix,
                                 u_light: light,
+                                u_ambient_color: ambient,
+                                u_diffuse_color: diffuse,
                                 perspective: perspective,
                                 view: view
                             },
