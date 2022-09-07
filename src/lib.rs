@@ -21,12 +21,6 @@ pub use structs::*;
 pub mod model_loading;
 pub mod structs;
 
-//todo:
-//other:
-// create promo game
-// better rendering
-// texture and normal map loading
-
 /// Blank template for tick update. Does not do anything, but fulfills the type requirements.
 pub fn blank_tick_update(_scene: &mut Scene) {}
 /// Blank template for on awake. Does not do anything, but fulfills the type requirements.

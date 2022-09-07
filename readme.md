@@ -21,6 +21,7 @@ The source code of examples can be found at /examples and they can be run with `
 - Custom coloured material support
 
 ## Future features
+- Physics engine
 - Multiple lights
 - Sky boxes and environment map support
 - Global illumination

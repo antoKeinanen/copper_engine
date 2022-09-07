@@ -50,6 +50,4 @@ fn dragon_tick_update(scene: &mut Scene) {
     if scene.game_objects[0].rotation[1] > 2.0 * PI {
         scene.game_objects[0].rotation[1] = 0.0;
     }
-
-
 }
