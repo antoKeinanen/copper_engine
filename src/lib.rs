@@ -2,6 +2,7 @@
 extern crate glium;
 extern crate image;
 
+use audio::AudioSource;
 use egui::vec2;
 use glium::{
     glutin::{
@@ -18,6 +19,7 @@ use structs::scene::Scene;
 
 pub use structs::*;
 
+pub mod audio;
 pub mod model_loading;
 pub mod structs;
 
@@ -143,20 +145,22 @@ pub fn engine(mut scene: Scene) {
                         ui.separator();
 
                         ui.collapsing("Audio", |ui| {
-                            ui.label(format!("Global: {}", scene.global_audio_sources.len()));
-                            ui.collapsing(
-                                format!("Local sources: {}", scene.local_audio_sources.len()),
-                                |ui| {
-                                    for i in 0..scene.local_audio_sources.len() {
-                                        let src = &scene.local_audio_sources[i];
-                                        ui.label(format!(
-                                            "{:.2?}: {}",
-                                            src.position, src.triggered
-                                        ));
-                                    }
-                                },
-                            );
-                        })
+                            for i in  0..scene.audio_sources.len() {
+                                let audio_source = &scene.audio_sources[i];
+                                match audio_source {
+                                    AudioSource::Local(audio_source) => {
+                                        ui.collapsing("Local source", |ui| {
+                                            ui.label(format!("Position: {:.3?}", audio_source.position));
+                                            ui.label(format!("Sound: {:?}", audio_source.sound));
+                                            ui.label(format!("Triggered: {:.3?}", audio_source.triggered));
+                                            ui.label(format!("Volume: {:.3?}", audio_source.volume));
+                                            ui.label(format!("Amplifier: {:.3?}", audio_source.amplifier));
+                                        });
+                                    },
+                                    _ => {},
+                                }
+                            }
+                        });
                     });
             });
 
@@ -281,30 +285,30 @@ pub fn engine(mut scene: Scene) {
                         .unwrap();
                 }
 
-                for i in 0..scene.global_audio_sources.len() {
-                    let mut audio_source = &mut scene.global_audio_sources[i];
+                for i in 0..scene.audio_sources.len() {
+                    let mut audio_source = &mut scene.audio_sources[i];
+                    match audio_source {
+                        AudioSource::Local(audio_source) => {
+                            if audio_source.triggered {
+                                audio_source.sound.set_volume(audio_source.volume);
+                                let am = audio_source.amplifier;
 
-                    if audio_source.triggered {
-                        audio_source.sound.set_volume(audio_source.volume);
+                                let [x, y, z] = audio_source.position;
+                                let [cx, cy, cz] = scene.main_camera.position;
+                                let [dx, dy, dz] = [(x - cx) * am, (y - cy) * am, (z - cz) * am];
 
-                        sl.play(&audio_source.sound);
-                        audio_source.triggered = false;
-                    }
-                }
+                                sl.play_3d(&audio_source.sound, dx, dy, dz);
+                                audio_source.triggered = false;
+                            }
+                        }
+                        AudioSource::Global(audio_source) => {
+                            if audio_source.triggered {
+                                audio_source.sound.set_volume(audio_source.volume);
 
-                for i in 0..scene.local_audio_sources.len() {
-                    let mut audio_source = &mut scene.local_audio_sources[i];
-
-                    if audio_source.triggered {
-                        audio_source.sound.set_volume(audio_source.volume);
-                        let am = audio_source.amplifier;
-
-                        let [x, y, z] = audio_source.position;
-                        let [cx, cy, cz] = scene.main_camera.position;
-                        let [dx, dy, dz] = [(x - cx) * am, (y - cy) * am, (z - cz) * am];
-
-                        sl.play_3d(&audio_source.sound, dx, dy, dz);
-                        audio_source.triggered = false;
+                                sl.play(&audio_source.sound);
+                                audio_source.triggered = false;
+                            }
+                        }
                     }
                 }
 
@@ -331,6 +335,11 @@ pub fn engine(mut scene: Scene) {
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     scene.input_manager.mouse_position = [position.x, position.y];
+                    let event_response = egui_glium.on_event(&event);
+
+                    if event_response {
+                        display.gl_window().window().request_redraw();
+                    }
                 }
                 _ => {
                     let event_response = egui_glium.on_event(&event);

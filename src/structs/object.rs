@@ -1,7 +1,7 @@
 //! Object is 3d model with translation, scale, and rotation in scene space.  
 
 use glium::{IndexBuffer, Program, VertexBuffer};
-use crate::{model_loading::model_loader::Model, Material, material};
+use crate::{model_loading::model_loader::Model, Material};
 use super::{
     scene::Scene,
     vertex::{Normal, Vertex},

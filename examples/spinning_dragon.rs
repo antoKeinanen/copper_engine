@@ -32,7 +32,6 @@ fn main() {
     let scene: Scene = Scene::new(
         vec![dragon],
         vec![],
-        vec![],
         input_manager,
         main_camera,
     );
