@@ -1,11 +1,11 @@
 //! Object is 3d model with translation, scale, and rotation in scene space.  
 
-use glium::{IndexBuffer, Program, VertexBuffer};
-use crate::{model_loading::model_loader::Model, Material};
 use super::{
-    scene::Scene,
     vertex::{Normal, Vertex},
 };
+use crate::object::{model_loader::Model, Material};
+use crate::structs::Scene;
+use glium::{IndexBuffer, Program, VertexBuffer};
 
 /// # fields
 /// - name: Can be used to distinguish between objects and shows up in the debug menu. **Should be unique.**
@@ -15,9 +15,9 @@ use super::{
 /// - scale: Set of \[x, y, z] f32. Indicates the scale of the object on each axis.
 /// - tick_update_func: `tick_update_func` is called every drawn frame. For more info about function call order refer to github wiki pages.
 /// - on_awake: `on_awake` is called once after model loading is completed.
-/// 
+///
 /// Other fields should not be set by the user and should be left as `None`. Usage of `::new()` is strongly recommended.
-pub struct Object {
+pub struct GameObject {
     pub name: String,
     pub model: Model,
     pub translation: [f32; 3],
@@ -34,7 +34,7 @@ pub struct Object {
     pub(crate) indices: Option<IndexBuffer<u16>>,
 }
 
-impl Object {
+impl GameObject {
     /// creates new 3d model object
     ///
     /// # Examples

@@ -1,10 +1,10 @@
 use std::f32::consts::PI;
 
 use copper_engine::{
-    blank_on_awake, blank_tick_update, engine, model_loading, structs::Scene,
-    Camera, InputManager, Object, Material,
+    blank_on_awake, blank_tick_update, engine, object, structs::Scene,
+    Camera, InputManager, object::{GameObject, Material},
 };
-use model_loading::model_loader::get_obj;
+use object::model_loader::get_obj;
 
 fn main() {
     let input_manager = InputManager::new();
@@ -18,7 +18,7 @@ fn main() {
         blank_on_awake,
     );
 
-    let dragon = Object::new(
+    let dragon = GameObject::new(
         "Dragon",
         get_obj("models/stanford_dragon_low.obj"),
         [0.0, 0.0, 0.0],

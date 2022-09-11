@@ -20,7 +20,7 @@ use structs::scene::Scene;
 pub use structs::*;
 
 pub mod audio;
-pub mod model_loading;
+pub mod object;
 pub mod structs;
 
 /// Blank template for tick update. Does not do anything, but fulfills the type requirements.
@@ -151,7 +151,6 @@ pub fn engine(mut scene: Scene) {
                                     AudioSource::Local(audio_source) => {
                                         ui.collapsing("Local source", |ui| {
                                             ui.label(format!("Position: {:.3?}", audio_source.position));
-                                            ui.label(format!("Sound: {:?}", audio_source.sound));
                                             ui.label(format!("Triggered: {:.3?}", audio_source.triggered));
                                             ui.label(format!("Volume: {:.3?}", audio_source.volume));
                                             ui.label(format!("Amplifier: {:.3?}", audio_source.amplifier));
@@ -286,7 +285,7 @@ pub fn engine(mut scene: Scene) {
                 }
 
                 for i in 0..scene.audio_sources.len() {
-                    let mut audio_source = &mut scene.audio_sources[i];
+                    let audio_source = &mut scene.audio_sources[i];
                     match audio_source {
                         AudioSource::Local(audio_source) => {
                             if audio_source.triggered {

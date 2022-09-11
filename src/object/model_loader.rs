@@ -1,4 +1,5 @@
-use crate::structs::vertex::{Normal, Vertex};
+
+use super::vertex::{Vertex, Normal};
 
 // **Should not be created by user: use `::get_obj()`**
 #[derive(Debug)]
