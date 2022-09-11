@@ -2,8 +2,9 @@
 
 use crate::audio::AudioSource;
 use crate::object::GameObject;
+use crate::input::InputManager;
 
-use super::{camera::Camera, input_manager::InputManager};
+use super::{camera::Camera, };
 
 /// # Fields
 /// - game_objects: List of currently loaded game objects.

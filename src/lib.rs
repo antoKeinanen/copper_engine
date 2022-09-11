@@ -22,6 +22,7 @@ pub use structs::*;
 pub mod audio;
 pub mod object;
 pub mod structs;
+pub mod input;
 
 /// Blank template for tick update. Does not do anything, but fulfills the type requirements.
 pub fn blank_tick_update(_scene: &mut Scene) {}

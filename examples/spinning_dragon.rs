@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use copper_engine::{
     blank_on_awake, blank_tick_update, engine, object, structs::Scene,
-    Camera, InputManager, object::{GameObject, Material},
+    Camera, input::InputManager, object::{GameObject, Material},
 };
 use object::model_loader::get_obj;
 
