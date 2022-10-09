@@ -110,6 +110,17 @@ pub fn engine(mut scene: Scene) {
 
                         ui.separator();
 
+                        ui.collapsing("Camera", |ui| {
+                            ui.label(format!("Translation: {:.3?}", scene.main_camera.position));
+                            ui.label(format!("Rotation: {:.3?}", scene.main_camera.rotation));
+                            ui.label(format!("Rotation: {:.3?}", scene.main_camera.up_vector));
+                            ui.label(format!("FOV: {:.3?}", scene.main_camera.fov));
+                            ui.label(format!("Near: {:.3?}", scene.main_camera.z_near));
+                            ui.label(format!("Far: {:.3?}", scene.main_camera.z_far));
+                        });
+
+                        ui.separator();
+
                         ui.collapsing(
                             format!("Loaded objects: {}", scene.game_objects.len()),
                             |ui| {
