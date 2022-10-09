@@ -20,9 +20,9 @@ use structs::scene::Scene;
 pub use structs::*;
 
 pub mod audio;
+pub mod input;
 pub mod object;
 pub mod structs;
-pub mod input;
 
 /// Blank template for tick update. Does not do anything, but fulfills the type requirements.
 pub fn blank_tick_update(_scene: &mut Scene) {}
@@ -157,21 +157,52 @@ pub fn engine(mut scene: Scene) {
                         ui.separator();
 
                         ui.collapsing("Audio", |ui| {
-                            for i in  0..scene.audio_sources.len() {
+                            for i in 0..scene.audio_sources.len() {
                                 let audio_source = &scene.audio_sources[i];
                                 match audio_source {
                                     AudioSource::Local(audio_source) => {
                                         ui.collapsing("Local source", |ui| {
-                                            ui.label(format!("Position: {:.3?}", audio_source.position));
-                                            ui.label(format!("Triggered: {:.3?}", audio_source.triggered));
-                                            ui.label(format!("Volume: {:.3?}", audio_source.volume));
-                                            ui.label(format!("Amplifier: {:.3?}", audio_source.amplifier));
+                                            ui.label(format!(
+                                                "Position: {:.3?}",
+                                                audio_source.position
+                                            ));
+                                            ui.label(format!(
+                                                "Triggered: {:.3?}",
+                                                audio_source.triggered
+                                            ));
+                                            ui.label(format!(
+                                                "Volume: {:.3?}",
+                                                audio_source.volume
+                                            ));
+                                            ui.label(format!(
+                                                "Amplifier: {:.3?}",
+                                                audio_source.amplifier
+                                            ));
                                         });
-                                    },
-                                    _ => {},
+                                    }
+                                    _ => {}
                                 }
                             }
                         });
+
+                        ui.separator();
+
+                        ui.collapsing("Input", |ui| {
+                            ui.collapsing("Mouse", |ui| {
+                                ui.label(format!(
+                                    "Position: {:.3?}",
+                                    scene.input_manager.mouse_position
+                                ))
+                            });
+                            ui.label(format!(
+                                "Pressed keys: {:?}",
+                                scene.input_manager.pressed_scancodes
+                            ));
+                            ui.label(format!(
+                                "Pressed modifiers: {:?}",
+                                scene.input_manager.modifiers
+                            ))
+                        })
                     });
             });
 
