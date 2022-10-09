@@ -107,6 +107,10 @@ pub fn engine(mut scene: Scene) {
                         ));
                         ui.label(format!("Frame: {}", drawn_frames));
                         ui.label(format!("Delta time: {:.10}", scene.delta_time));
+                        ui.label(format!(
+                            "Screen size: {}x{}",
+                            scene.main_camera.window_size[0], scene.main_camera.window_size[1]
+                        ));
 
                         ui.separator();
 
@@ -369,6 +373,7 @@ pub fn engine(mut scene: Scene) {
             Event::RedrawRequested(_) if !cfg!(windows) => redraw(),
 
             Event::WindowEvent { event, .. } => match event {
+                WindowEvent::Resized(ps) => scene.main_camera.window_size = [ps.width, ps.height],
                 WindowEvent::CloseRequested | WindowEvent::Destroyed => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                 }
