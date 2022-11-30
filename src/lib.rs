@@ -14,7 +14,7 @@ use glium::{
     Display, Surface,
 };
 use soloud::{AudioExt, Soloud};
-use std::fs;
+use std::{f32::consts::PI, fs};
 use structs::scene::Scene;
 
 pub use structs::*;
@@ -23,6 +23,7 @@ pub mod audio;
 pub mod input;
 pub mod object;
 pub mod structs;
+pub mod math;
 
 /// Blank template for tick update. Does not do anything, but fulfills the type requirements.
 pub fn blank_tick_update(_scene: &mut Scene) {}
@@ -236,17 +237,17 @@ pub fn engine(mut scene: Scene) {
                     let (width, height) = target.get_dimensions();
                     let aspect_ratio = height as f32 / width as f32;
 
-                    let fov: f32 = 3.141592 / 3.0;
-                    let zfar = 1024.0;
-                    let znear = 0.1;
+                    let fov = scene.main_camera.fov;
+                    let z_far = scene.main_camera.z_far;
+                    let z_near = scene.main_camera.z_near;
 
                     let f = 1.0 / (fov / 2.0).tan();
 
                     [
                         [f * aspect_ratio, 0.0, 0.0, 0.0],
                         [0.0, f, 0.0, 0.0],
-                        [0.0, 0.0, (zfar + znear) / (zfar - znear), 1.0],
-                        [0.0, 0.0, -(2.0 * zfar * znear) / (zfar - znear), 0.0],
+                        [0.0, 0.0, (z_far + z_near) / (z_near - z_far), 1.0],
+                        [0.0, 0.0, -(2.0 * z_far * z_near) / (z_near - z_far), 0.0],
                     ]
                 };
 
@@ -258,8 +259,7 @@ pub fn engine(mut scene: Scene) {
                         write: true,
                         ..Default::default()
                     },
-                    backface_culling:
-                        glium::draw_parameters::BackfaceCullingMode::CullCounterClockwise,
+                    backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
                     ..Default::default()
                 };
 
