@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use copper_engine::{
     blank_on_awake, blank_tick_update, engine,
     input::InputManager,
+    math::Vector3,
     object::{model_loader::get_obj, GameObject, Material},
     structs::Scene,
     Camera,
@@ -12,10 +13,10 @@ fn main() {
     let input_manager = InputManager::new();
     let main_camera = Camera::new(
         0.1,
-        1024.0,
-        PI / 3.0,
-        [0.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0],
+        100.0,
+        PI / 4.0,
+        Vector3::new(0.0, 0.0, 0.0),
+        Vector3::new(0.0, 0.0, 1.0),
         camera_tick_update,
         blank_on_awake,
     );
@@ -83,23 +84,40 @@ fn main() {
 }
 
 fn camera_tick_update(scene: &mut Scene) {
-    let neutral_speed: f32 = 100.0;
-    let shift_speed: f32 = 250.0;
-    let cam_sens: f32 = 0.0025;
+    let movement_speed: f32 = 1000.0;
 
-    let mc = scene.main_camera;
+    // W
+    if scene.input_manager.pressed_scancodes.contains(&17) {
+        scene.main_camera.position.z += movement_speed * scene.delta_time;
+        scene.main_camera.rotation.z += movement_speed * scene.delta_time;
+    }
+    // S
+    if scene.input_manager.pressed_scancodes.contains(&31) {
+        scene.main_camera.position.z -= movement_speed * scene.delta_time;
+        scene.main_camera.rotation.z -= movement_speed * scene.delta_time;
 
-    let mut mp = scene.input_manager.mouse_position;
-    let cam_rot = mc.rotation;
+    }
+    // A
+    if scene.input_manager.pressed_scancodes.contains(&30) {
+        scene.main_camera.position.x += movement_speed * scene.delta_time;
+        scene.main_camera.rotation.x += movement_speed * scene.delta_time;
+    }
+    // D
+    if scene.input_manager.pressed_scancodes.contains(&32) {
+        scene.main_camera.position.x -= movement_speed * scene.delta_time;
+        scene.main_camera.rotation.x -= movement_speed * scene.delta_time;
+    }
 
-    mp[0] -= (mc.window_size[0] / 2) as f64;
-    mp[1] -= (mc.window_size[1] / 2) as f64;
-
-    //x rotation
-    scene.main_camera.rotation[0] = (mp[0] as f32 * cam_sens).cos();
-    scene.main_camera.rotation[2] = (mp[0] as f32 * cam_sens).sin();
-
-    // //y rotation
-    // scene.main_camera.rotation[0] = (mp[1] as f32 * cam_sens).cos();
-    // scene.main_camera.rotation[1] = (mp[1] as f32 * cam_sens).sin();
+    // Space
+    if scene.input_manager.pressed_scancodes.contains(&57) {
+        scene.main_camera.position.y += movement_speed * scene.delta_time;
+        scene.main_camera.rotation.y += movement_speed * scene.delta_time;
+    }
+    // Shift
+    if scene.input_manager.pressed_scancodes.contains(&42) {
+        scene.main_camera.position.y -= movement_speed * scene.delta_time;
+        scene.main_camera.rotation.y -= movement_speed * scene.delta_time;
+    }
 }
+
+//https://learnopengl.com/Getting-started/Camera

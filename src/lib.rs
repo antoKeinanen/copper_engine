@@ -13,6 +13,7 @@ use glium::{
     },
     Display, Surface,
 };
+use math::{Matrix4x4, Vector3};
 use soloud::{AudioExt, Soloud};
 use std::{f32::consts::PI, fs};
 use structs::scene::Scene;
@@ -21,9 +22,9 @@ pub use structs::*;
 
 pub mod audio;
 pub mod input;
+pub mod math;
 pub mod object;
 pub mod structs;
-pub mod math;
 
 /// Blank template for tick update. Does not do anything, but fulfills the type requirements.
 pub fn blank_tick_update(_scene: &mut Scene) {}
@@ -118,7 +119,6 @@ pub fn engine(mut scene: Scene) {
                         ui.collapsing("Camera", |ui| {
                             ui.label(format!("Translation: {:.3?}", scene.main_camera.position));
                             ui.label(format!("Rotation: {:.3?}", scene.main_camera.rotation));
-                            ui.label(format!("Rotation: {:.3?}", scene.main_camera.up_vector));
                             ui.label(format!("FOV: {:.3?}", scene.main_camera.fov));
                             ui.label(format!("Near: {:.3?}", scene.main_camera.z_near));
                             ui.label(format!("Far: {:.3?}", scene.main_camera.z_far));
@@ -235,42 +235,42 @@ pub fn engine(mut scene: Scene) {
 
                 let perspective = {
                     let (width, height) = target.get_dimensions();
-                    let aspect_ratio = height as f32 / width as f32;
+                    let aspect_ratio = width as f32 / height as f32;
 
                     let fov = scene.main_camera.fov;
                     let z_far = scene.main_camera.z_far;
                     let z_near = scene.main_camera.z_near;
 
-                    let f = 1.0 / (fov / 2.0).tan();
+                    let glm_perspective =
+                        *glm::ext::perspective(fov, aspect_ratio, z_near, z_far).as_array();
 
-                    [
-                        [f * aspect_ratio, 0.0, 0.0, 0.0],
-                        [0.0, f, 0.0, 0.0],
-                        [0.0, 0.0, (z_far + z_near) / (z_near - z_far), 1.0],
-                        [0.0, 0.0, -(2.0 * z_far * z_near) / (z_near - z_far), 0.0],
-                    ]
+                    let mut perspective = Matrix4x4::empty();
+
+                    for i in 0..4 {
+                        for j in 0..4 {
+                            perspective.matrix[i][j] = glm_perspective[i][j];
+                        }
+                    }
+
+                    perspective
+
+                    // Matrix4x4::new(
+                    //     [f * aspect_ratio, 0.0, 0.0, 0.0],
+                    //     [0.0, f, 0.0, 0.0],
+                    //     [0.0, 0.0, (z_far + z_near) / (z_near - z_far), 1.0],
+                    //     [0.0, 0.0, -(2.0 * z_far * z_near) / (z_near - z_far), 0.0],
+                    // )
                 };
 
                 let light = [0.0, 10.0, -5.0f32];
 
-                let params = glium::DrawParameters {
-                    depth: glium::Depth {
-                        test: glium::draw_parameters::DepthTest::IfLess,
-                        write: true,
-                        ..Default::default()
-                    },
-                    backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
-                    ..Default::default()
-                };
-
                 let cam = scene.main_camera;
+
+                let view = scene.main_camera.look_at();
 
                 (cam.tick_update_func)(&mut scene);
 
-                let view = view_matrix(&cam.position, &cam.rotation, &cam.up_vector);
-
                 // under gui layer
-
                 for i in 0..scene.game_objects.len() {
                     let object = &scene.game_objects[i];
                     (object.tick_update_func)(&mut scene);
@@ -310,6 +310,17 @@ pub fn engine(mut scene: Scene) {
                         diffuse[i] = ambient[i] * 2.0;
                     }
 
+                    let params = glium::DrawParameters {
+                        depth: glium::Depth {
+                            test: glium::draw_parameters::DepthTest::IfLess,
+                            write: true,
+                            ..Default::default()
+                        },
+                        backface_culling:
+                            glium::draw_parameters::BackfaceCullingMode::CullClockwise,
+                        ..Default::default()
+                    };
+
                     target
                         .draw(
                             (
@@ -319,12 +330,12 @@ pub fn engine(mut scene: Scene) {
                             object.indices.as_ref().unwrap(),
                             &object.program.as_ref().unwrap(),
                             &uniform! {
-                                position_matrix: position_matrix,
+                                model_pos_mat: position_matrix,
                                 u_light: light,
                                 u_ambient_color: ambient,
                                 u_diffuse_color: diffuse,
-                                perspective: perspective,
-                                view: view
+                                projection: perspective.matrix,
+                                view: view.matrix,
                             },
                             &params,
                         )
@@ -340,7 +351,7 @@ pub fn engine(mut scene: Scene) {
                                 let am = audio_source.amplifier;
 
                                 let [x, y, z] = audio_source.position;
-                                let [cx, cy, cz] = scene.main_camera.position;
+                                let [cx, cy, cz] = scene.main_camera.position.to_array();
                                 let [dx, dy, dz] = [(x - cx) * am, (y - cy) * am, (z - cz) * am];
 
                                 sl.play_3d(&audio_source.sound, dx, dy, dz);
@@ -421,44 +432,4 @@ pub fn engine(mut scene: Scene) {
         }
         prev_time = now;
     });
-}
-
-fn view_matrix(position: &[f32; 3], direction: &[f32; 3], up: &[f32; 3]) -> [[f32; 4]; 4] {
-    let f = {
-        let f = direction;
-        let len = f[0] * f[0] + f[1] * f[1] + f[2] * f[2];
-        let len = len.sqrt();
-        [f[0] / len, f[1] / len, f[2] / len]
-    };
-
-    let s = [
-        up[1] * f[2] - up[2] * f[1],
-        up[2] * f[0] - up[0] * f[2],
-        up[0] * f[1] - up[1] * f[0],
-    ];
-
-    let s_norm = {
-        let len = s[0] * s[0] + s[1] * s[1] + s[2] * s[2];
-        let len = len.sqrt();
-        [s[0] / len, s[1] / len, s[2] / len]
-    };
-
-    let u = [
-        f[1] * s_norm[2] - f[2] * s_norm[1],
-        f[2] * s_norm[0] - f[0] * s_norm[2],
-        f[0] * s_norm[1] - f[1] * s_norm[0],
-    ];
-
-    let p = [
-        -position[0] * s_norm[0] - position[1] * s_norm[1] - position[2] * s_norm[2],
-        -position[0] * u[0] - position[1] * u[1] - position[2] * u[2],
-        -position[0] * f[0] - position[1] * f[1] - position[2] * f[2],
-    ];
-
-    [
-        [s_norm[0], u[0], f[0], 0.0],
-        [s_norm[1], u[1], f[1], 0.0],
-        [s_norm[2], u[2], f[2], 0.0],
-        [p[0], p[1], p[2], 1.0],
-    ]
 }

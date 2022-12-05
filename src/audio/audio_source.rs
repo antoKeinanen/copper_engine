@@ -28,6 +28,7 @@ impl AudioSourceGlobal {
     ///
     /// # Examples
     /// ```
+    /// --doc
     /// let audio_source = AudioSourceGlobal::new("path/to/music.mp3", 1.0, true);
     /// ```
     pub fn new(path: &str, volume: f32, play_on_awake: bool) -> Self {
@@ -69,6 +70,7 @@ impl AudioSourceLocal {
     ///
     /// # Examples
     /// ```
+    /// use super::*;
     /// let audio_source = AudioSourceLocal::new("path/to/music.mp3", 1.0, true, [10.0, 0.0, 0.0], 50.0);
     /// ```
     pub fn new(

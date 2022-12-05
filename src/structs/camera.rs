@@ -1,5 +1,7 @@
 //! Camera is the main component responsible of rendering objects to the screen. Cameras are also the main audio listener of the scene.
 
+use crate::math::{Matrix4x4, Vector3};
+
 use super::scene::Scene;
 
 /// #  Fields
@@ -20,13 +22,16 @@ pub struct Camera {
     pub z_near: f32,
     pub z_far: f32,
     pub fov: f32,
-    pub position: [f32; 3],
-    pub rotation: [f32; 3],
-    pub up_vector: [f32; 3],
-    pub right_vector: [f32; 3],
+    pub position: Vector3,
+    pub rotation: Vector3,
+    pub up_vector: Vector3,
+    pub right_vector: Vector3,
     pub tick_update_func: fn(&mut Scene),
     pub on_awake: fn(&mut Scene),
     pub window_size: [u32; 2],
+    pub cam_dir: Vector3,
+    pub local_up: Vector3,
+    pub local_right: Vector3,
 }
 
 impl Camera {
@@ -50,8 +55,8 @@ impl Camera {
         near: f32,
         far: f32,
         fov: f32,
-        position: [f32; 3],
-        rotation: [f32; 3],
+        position: Vector3,
+        rotation: Vector3,
         tick_update_func: fn(&mut Scene),
         on_awake: fn(&mut Scene),
     ) -> Self {
@@ -61,11 +66,65 @@ impl Camera {
             fov: fov,
             position: position,
             rotation: rotation,
-            up_vector: [0.0, 1.0, 0.0],
-            right_vector: [1.0, 0.0, 0.0],
+            up_vector: Vector3::new(0.0, 1.0, 0.0),
+            right_vector: Vector3::new(1.0, 0.0, 0.0),
             tick_update_func: tick_update_func,
             on_awake: on_awake,
             window_size: [0, 0],
+            cam_dir: Vector3::new(0.0, 0.0, 0.0),
+            local_up: Vector3::new(0.0, 0.0, 0.0),
+            local_right: Vector3::new(0.0, 0.0, 0.0),
         }
+    }
+
+    pub fn look_at(&mut self) -> Matrix4x4 {
+        let position: glm::Vector3<f32> = glm::Vector3 {
+            x: self.position.x,
+            y: self.position.y,
+            z: self.position.z,
+        };
+
+        let target = glm::Vector3 {
+            x: self.rotation.x,
+            y: self.rotation.y,
+            z: self.rotation.z,
+        };
+        let up = glm::Vector3 {
+            x: self.up_vector.x,
+            y: self.up_vector.y,
+            z: self.up_vector.z,
+        };
+
+        // let cam_dir = (position - target).normalize();
+        // let cam_right = cam_dir.cross_product(up).normalize();
+        // let cam_up = cam_right.cross_product(cam_dir);
+
+        // self.cam_dir = cam_dir;
+        // self.local_right = cam_right;
+        // self.local_up = cam_up;
+
+        // let rotation_mat = Matrix4x4::new(
+        //     [cam_right.x, cam_right.y, cam_right.z, 0.0],
+        //     [cam_up.x, cam_up.y, cam_up.z, 0.0],
+        //     [cam_dir.x, cam_dir.y, cam_dir.z, 0.0],
+        //     [
+        //         -cam_dir.dot(position),
+        //         -cam_right.dot(position),
+        //         cam_up.dot(position),
+        //         1.0,
+        //     ],
+        // );
+
+        let look_mat = *glm::ext::look_at(position, target, up).as_array();
+
+        let mut view_matrix = Matrix4x4::empty();
+
+        for i in 0..4 {
+            for j in 0..4 {
+                view_matrix.matrix[i][j] = look_mat[i][j];
+            }
+        }
+
+        view_matrix
     }
 }
