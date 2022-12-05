@@ -2,6 +2,8 @@ use std::f32::consts::PI;
 
 use libm::{atan2f, copysignf};
 
+use super::{LookAtCoordinate, Vector3};
+
 pub struct EulerAngle {
     pub yaw: f32,
     pub pitch: f32,
@@ -35,5 +37,17 @@ impl EulerAngle {
         let yaw = atan2f(siny_cosp, cosy_cosp);
 
         EulerAngle { yaw, pitch, roll }
+    }
+
+    pub fn from_look_at_coordinates(rotation: LookAtCoordinate, offset: Vector3) {
+        let x = rotation.x - offset.x;
+        let y = rotation.y - offset.y;
+        let z = (rotation.z - offset.z).acos();
+
+        /*
+        let x = rotation.yaw.cos() * rotation.pitch.cos() + offset.x;
+        let y = rotation.yaw.sin() * rotation.pitch.cos() + offset.y;
+        let z = rotation.pitch.sin() + offset.z;
+        */
     }
 }
